@@ -148,6 +148,20 @@ namespace Umbraco.Core.Persistence
                         _db.Update<UserDto>("SET id = @IdAfter WHERE id = @IdBefore AND userLogin = @Login", new { IdAfter = 0, IdBefore = 1, Login = "admin" });
                     }
 
+                    if (_syntaxProvider is PostgreSyntaxProvider && tableDefinition.Columns.Any(x => x.IsIdentity))
+                    {
+                       
+                        var column = tableDefinition.Columns.First(x => x.IsIdentity).Name;
+
+                        _db.Execute(new Sql(string.Format("select setval(pg_get_serial_sequence({0}, {1}), (select max({3}) + 1  from {2}));", 
+                                _syntaxProvider.GetQuotedValue(tableName),
+                                _syntaxProvider.GetQuotedValue(column),
+                                _syntaxProvider.GetQuotedTableName(tableName),
+                                _syntaxProvider.GetQuotedColumnName(column))));
+
+                        _logger.Info<Database>(string.Format("resequenced {0} ", _syntaxProvider.GetQuotedTableName(tableName)));
+                    }
+
                     //Loop through index statements and execute sql
                     foreach (var sql in indexSql)
                     {

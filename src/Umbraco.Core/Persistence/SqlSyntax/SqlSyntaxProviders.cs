@@ -19,7 +19,8 @@ namespace Umbraco.Core.Persistence.SqlSyntax
             {
                 new MySqlSyntaxProvider(logger),
                 new SqlCeSyntaxProvider(),
-                new SqlServerSyntaxProvider()
+                new SqlServerSyntaxProvider(),
+                new PostgreSyntaxProvider(logger)
             });
         }
 

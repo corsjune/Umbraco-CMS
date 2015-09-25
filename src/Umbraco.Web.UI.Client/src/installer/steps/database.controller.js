@@ -6,6 +6,7 @@ angular.module("umbraco.install").controller("Umbraco.Installer.DataBaseControll
 					{name: 'Microsoft SQL Server', id: 1},
                     { name: 'Microsoft SQL Azure', id: 3 },
                     { name: 'MySQL', id: 2 },
+                    { name: 'PostgreSql', id: 25 },
 					{name: 'Custom connection string', id: -1}];
 
 	if(installerService.status.current.model.dbType === undefined){

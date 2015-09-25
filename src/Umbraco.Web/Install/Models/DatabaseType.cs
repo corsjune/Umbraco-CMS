@@ -6,6 +6,7 @@ namespace Umbraco.Web.Install.Models
         SqlServer,
         MySql,
         SqlAzure,
-        Custom
+        Custom,
+        PostGresSql=25
     }
 }
