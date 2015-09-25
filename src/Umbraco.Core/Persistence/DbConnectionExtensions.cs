@@ -32,6 +32,11 @@ namespace Umbraco.Core.Persistence
                 return DatabaseProviders.SqlServerCE;
             }
 
+            if (allKeys.InvariantContains("Protocol"))
+            {
+                return DatabaseProviders.PostgreSQL;
+            }
+
             return DatabaseProviders.SqlServer;
         }
 
@@ -51,6 +56,8 @@ namespace Umbraco.Core.Persistence
                     factory = DbProviderFactories.GetFactory("MySql.Data.MySqlClient");
                     break;
                 case DatabaseProviders.PostgreSQL:
+                    factory = DbProviderFactories.GetFactory("Npgsql");
+                    break;
                 case DatabaseProviders.Oracle:
                 case DatabaseProviders.SQLite:                    
                 default:

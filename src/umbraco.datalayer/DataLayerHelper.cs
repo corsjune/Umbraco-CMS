@@ -138,6 +138,11 @@ namespace umbraco.DataLayer
                 _dataHelperTypeName = "MySql";
             }
 
+            if (provider.StartsWith("Npgsql"))
+            {
+                _dataHelperTypeName = "PostgreSQL";
+            }
+
             if (provider.StartsWith("System.Data.SqlServerCe"))
             {
                 _dataHelperTypeName = "SQLCE4Umbraco.SqlCEHelper";

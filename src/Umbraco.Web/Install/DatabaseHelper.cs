@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Owin.Mapping;
 using Umbraco.Core;
 using Umbraco.Core.Persistence;
 using Umbraco.Web.Install.Models;
@@ -42,7 +43,26 @@ namespace Umbraco.Web.Install
                     database.DatabaseType.ToString(),
                     out providerName);
 
-                provider = database.DatabaseType == DatabaseType.MySql ? DatabaseProviders.MySql : DatabaseProviders.SqlServer;
+                switch (database.DatabaseType)
+                {
+                    case DatabaseType.MySql:
+                    {
+                        provider = DatabaseProviders.MySql;
+                        break;
+                    }
+ 
+                    case DatabaseType.PostGresSql:
+                    {
+                        provider = DatabaseProviders.PostgreSQL;
+                        break;
+                    }
+                    default:
+                    {
+                        provider = DatabaseProviders.SqlServer;
+                        break;
+                    }
+                }
+
             }
 
             return DbConnectionExtensions.IsConnectionAvailable(connectionString, provider);

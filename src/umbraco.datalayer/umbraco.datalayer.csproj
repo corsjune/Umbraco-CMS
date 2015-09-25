@@ -80,6 +80,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\MySql.Data.6.9.7\lib\net45\MySql.Data.dll</HintPath>
     </Reference>
+    <Reference Include="Npgsql, Version=2.2.5.0, Culture=neutral, PublicKeyToken=5d8b90d52f46fda7, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Npgsql.2.2.5\lib\net45\Npgsql.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core">
@@ -104,6 +108,12 @@
     <Compile Include="ISqlHelper.cs" />
     <Compile Include="IParameterContainer.cs" />
     <Compile Include="SqlHelperException.cs" />
+    <Compile Include="SqlHelpers\PostgreSql\PostgreSQLDataReader.cs" />
+    <Compile Include="SqlHelpers\PostgreSql\PostgreSQLHelper.cs" />
+    <Compile Include="SqlHelpers\PostgreSql\PostgreSQLInstaller.cs" />
+    <Compile Include="SqlHelpers\PostgreSql\PostgreSQLParameter.cs" />
+    <Compile Include="SqlHelpers\PostgreSql\PostgreSQLParser.cs" />
+    <Compile Include="SqlHelpers\PostgreSql\PostgreSQLUtility.cs" />
     <Compile Include="SqlHelpers\MySql\MySqlInstaller.cs" />
     <Compile Include="SqlHelpers\MySql\MySqlParser.cs" />
     <Compile Include="SqlHelpers\MySql\MySqlUtility.cs" />

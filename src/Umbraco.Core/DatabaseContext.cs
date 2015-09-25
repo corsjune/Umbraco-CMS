@@ -41,7 +41,8 @@ namespace Umbraco.Core
             {
                 new MySqlSyntaxProvider(LoggerResolver.Current.Logger),
                 new SqlCeSyntaxProvider(), 
-                new SqlServerSyntaxProvider()
+                new SqlServerSyntaxProvider(),
+                new PostgreSyntaxProvider(LoggerResolver.Current.Logger)
             }))
         {
         }
@@ -246,6 +247,13 @@ namespace Umbraco.Core
                 providerName = "MySql.Data.MySqlClient";
                 return string.Format("Server={0}; Database={1};Uid={2};Pwd={3}", server, databaseName, user, password);
             }
+
+            if (databaseProvider.ToLower().Contains("postgres"))
+            {
+                providerName = "Npgsql";
+                return string.Format("Server={0}; Database={1};Uid={2};Pwd={3}", server, databaseName, user, password);
+            }
+
             if (databaseProvider.ToLower().Contains("azure"))
             {
                 return BuildAzureConnectionString(server, databaseName, user, password);
@@ -565,6 +573,8 @@ namespace Umbraco.Core
 
                 message = GetResultMessageForMySql();
 
+                CreatePostgreBooleanOperators();
+
                 var schemaResult = ValidateDatabaseSchema();
                 
                 var installedSchemaVersion = schemaResult.DetermineInstalledVersion();
@@ -575,12 +585,14 @@ namespace Umbraco.Core
                     var helper = new DatabaseSchemaHelper(database, _logger, SqlSyntax);
                     helper.CreateDatabaseSchema(true, applicationContext);
 
+
                     message = message + "<p>Installation completed!</p>";
 
                     //now that everything is done, we need to determine the version of SQL server that is executing
                     _logger.Info<DatabaseContext>("Database configuration status: " + message);
                     return new Result { Message = message, Success = true, Percentage = "100" };
                 }
+
 
                 //we need to do an upgrade so return a new status message and it will need to be done during the next step
                 _logger.Info<DatabaseContext>("Database requires upgrade");
@@ -702,6 +714,16 @@ namespace Umbraco.Core
             return string.Empty;
         }
 
+        private string CreatePostgreBooleanOperators()
+        {
+            if (SqlSyntax.GetType() == typeof(PostgreSyntaxProvider))
+            {
+                var database = this._factory.CreateDatabase();
+
+                var run = database.ExecuteScalar<string>(PostgreSqlModificationHelper.intToBoolOperatorSQL);
+            }
+            return string.Empty;
+        }
         /*
         private string GetResultMessageForMySql(bool? supportsCaseInsensitiveQueries)
         {

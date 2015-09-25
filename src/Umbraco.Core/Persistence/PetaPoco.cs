@@ -24,6 +24,8 @@ using System.Text.RegularExpressions;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Linq.Expressions;
+using System.Dynamic;
+using System.Collections;
 
 namespace Umbraco.Core.Persistence
 {
@@ -132,8 +134,111 @@ namespace Umbraco.Core.Persistence
 		Func<object, object> GetFromDbConverter(Type DestType, Type SourceType);
 	}
 
-	// Database class ... this is where most of the action happens
-	public class Database : IDisposable
+    //implement Massive's implementation of Dynamic Object to support case insesitivity dynamics
+    public class MassiveExpando : DynamicObject, IDictionary<string, object>
+    {
+        private IDictionary<string, object> Dictionary = new Dictionary<string, object>(StringComparer.InvariantCultureIgnoreCase);
+
+        public void Add(KeyValuePair<string, object> item)
+        {
+            Dictionary.Add(item);
+        }
+        public void Clear()
+        {
+            Dictionary.Clear();
+        }
+        public bool Contains(KeyValuePair<string, object> item)
+        {
+            return Dictionary.Contains(item);
+        }
+        public void CopyTo(KeyValuePair<string, object>[] array, int arrayIndex)
+        {
+            Dictionary.CopyTo(array, arrayIndex);
+        }
+        public bool Remove(KeyValuePair<string, object> item)
+        {
+            return Dictionary.Remove(item);
+        }
+        public int Count { get { return this.Dictionary.Keys.Count; } }
+        public bool IsReadOnly { get { return Dictionary.IsReadOnly; } }
+        public override bool TryGetMember(GetMemberBinder binder, out object result)
+        {
+            if (this.Dictionary.ContainsKey(binder.Name))
+            {
+                result = this.Dictionary[binder.Name];
+                return true;
+            }
+            return base.TryGetMember(binder, out result);
+        }
+        public override bool TrySetMember(SetMemberBinder binder, object value)
+        {
+            if (!this.Dictionary.ContainsKey(binder.Name))
+                this.Dictionary.Add(binder.Name, value);
+            else
+                this.Dictionary[binder.Name] = value;
+            return true;
+        }
+        public override bool TryInvokeMember(InvokeMemberBinder binder, object[] args, out object result)
+        {
+            if (this.Dictionary.ContainsKey(binder.Name) && this.Dictionary[binder.Name] is Delegate)
+            {
+                Delegate del = this.Dictionary[binder.Name] as Delegate;
+                result = del.DynamicInvoke(args);
+                return true;
+            }
+            return base.TryInvokeMember(binder, args, out result);
+        }
+        public override bool TryDeleteMember(DeleteMemberBinder binder)
+        {
+            if (this.Dictionary.ContainsKey(binder.Name))
+            {
+                this.Dictionary.Remove(binder.Name);
+                return true;
+            }
+            return base.TryDeleteMember(binder);
+        }
+        public IEnumerator<KeyValuePair<string, object>> GetEnumerator()
+        {
+            return Dictionary.GetEnumerator();
+        }
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+        public bool ContainsKey(string key)
+        {
+            return Dictionary.ContainsKey(key);
+        }
+        public void Add(string key, object value)
+        {
+            Dictionary.Add(key, value);
+        }
+        public bool Remove(string key)
+        {
+            return Dictionary.Remove(key);
+        }
+        public bool TryGetValue(string key, out object value)
+        {
+            return Dictionary.TryGetValue(key, out value);
+        }
+        public object this[string key]
+        {
+            get { return Dictionary[key]; }
+            set { Dictionary[key] = value; }
+        }
+        public ICollection<string> Keys
+        {
+            get { return Dictionary.Keys; }
+        }
+        public ICollection<object> Values
+        {
+            get { return Dictionary.Values; }
+        }
+    }
+
+
+    // Database class ... this is where most of the action happens
+    public class Database : IDisposable
 	{
 		public Database(IDbConnection connection)
 		{
@@ -481,9 +586,17 @@ namespace Umbraco.Core.Persistence
 				}
 				else if (t == typeof(Guid))
 				{
-					p.Value = item.ToString();
-					p.DbType = DbType.String;
-					p.Size = 40;
+                    if (p.GetType().Name == "NpgsqlParameter")
+                    {
+                        p.Value = item;
+                        p.DbType = DbType.Guid; 
+                    }
+                    else
+                    {
+                        p.Value = item.ToString();
+                        p.DbType = DbType.String;
+                        p.Size = 40;
+                    }
 				}
 				else if (t == typeof(string))
 				{
@@ -505,9 +618,17 @@ namespace Umbraco.Core.Persistence
 					p.Value = (item as AnsiString).Value;
 					p.DbType = DbType.AnsiString;
 				}
-				else if (t == typeof(bool) && _dbType != DBType.PostgreSQL)
+				else if (t == typeof(bool))
 				{
-					p.Value = ((bool)item) ? 1 : 0;
+                    if  (p.GetType().Name=="NpgsqlParameter")
+                    {
+                        p.Value = ((bool)item) ? "1" : "0";
+                    }
+                    else
+                    {
+                        p.Value = ((bool)item) ? 1 : 0;
+                    }
+                  
 				}
 				else if (item.GetType().Name == "SqlGeography") //SqlGeography is a CLR Type
 				{
@@ -1272,7 +1393,10 @@ namespace Umbraco.Core.Persistence
 					return string.Format("`{0}`", str);
 
 				case DBType.PostgreSQL:
-				case DBType.Oracle:
+                    //force everything lowercase for postgre
+                    return string.Format("\"{0}\"", str.ToLower());
+
+                case DBType.Oracle:
 					return string.Format("\"{0}\"", str);
 
 				default:
@@ -1995,7 +2119,7 @@ namespace Umbraco.Core.Persistence
                     if (type == typeof(object))
                     {
                         // var poco=new T()
-                        il.Emit(OpCodes.Newobj, typeof(System.Dynamic.ExpandoObject).GetConstructor(Type.EmptyTypes));			// obj
+                        il.Emit(OpCodes.Newobj, typeof(MassiveExpando).GetConstructor(Type.EmptyTypes));			// obj
 
                         MethodInfo fnAdd = typeof(IDictionary<string, object>).GetMethod("Add");
 
