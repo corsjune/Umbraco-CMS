@@ -1,4 +1,17 @@
 Umbraco CMS
+
+This fork is designed to run on PostgreSQL as an additional Umbraco datasources 
+
+Currently builds, runs and  completes installation for v 7.3. 
+Uses Postgres 9.4 and npgsql 2.2.7
+
+Some notes:
+
+All postgres tables, columns, etc are forced lowercase as Postgres doesnt havent a great case insensitivity platform and Umbraco for most part uses camelCase.
+
+PetaPoco and select other Umbraco class's were modified to rely on the rule that Postgres database objects have been forced to lowercase
+
+
 ===========
 Umbraco is a free open source Content Management System built on the ASP.NET platform.
 
