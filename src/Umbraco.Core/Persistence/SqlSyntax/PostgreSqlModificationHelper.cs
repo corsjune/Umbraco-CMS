@@ -75,15 +75,15 @@ namespace Umbraco.Core.Persistence.SqlSyntax
                 COMMUTATOR = <>,
                 NEGATOR = =
                 );
-
-                update pg_cast set castcontext = 'i' where oid in (
-                select c.oid
-                from pg_cast c
-                inner join pg_type src on src.oid = c.castsource
-                inner join pg_type tgt on tgt.oid = c.casttarget
-                where src.typname like 'int%' and tgt.typname like 'bool%'
-                )
 ";
+                //update pg_cast set castcontext = 'i' where oid in (
+                //select c.oid
+                //from pg_cast c
+                //inner join pg_type src on src.oid = c.castsource
+                //inner join pg_type tgt on tgt.oid = c.casttarget
+                //where src.typname like 'int%' and tgt.typname like 'bool%'
+                //)
+
                 
             }
         }
