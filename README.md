@@ -1,6 +1,6 @@
 Umbraco CMS
 
-This fork is designed to run on PostgreSQL as an additional Umbraco datasources 
+This fork is designed to run Umbraco on PostgreSQL as an additional datastore. Most changes made would not affect Umbraco's ability to run on SQL Server, MySQL, or SQL CE. However, do note the PetaPoco changes below.  
 
 Currently builds, runs and  completes installation for v 7.3. 
 Uses Postgres 9.4 and npgsql 2.2.7
@@ -10,7 +10,7 @@ Some notes:
 
 In this fork, I force all PostgreSQL database objects to lowercase. This is due to problems due to Umbracos camel casing,  inconsistent quoting of schema objects and PostgreSQL's manner of case insensitivity. 
 
-In addition, PetaPoco objects were modified to expect PostgreSQL to have lowercase schemas. In addition most significantly, PetaPoco was modified to use an internal Expando object (sourced from the Massive project) that is case insensitive rather than the default System.Dynamic.ExpandoObject. This was done as the PetaPoco was building case sensitive POCOS (derived from Expando) causing Umbraco to expecting camel case objects and PostgreSQL returning lowercase. If the POCO is case insensitive, problem solved. 
+In addition, PetaPoco objects were modified to expect PostgreSQL to have lowercase schemas. In addition most significantly, PetaPoco was modified to use an internal Expando object (sourced from the Massive project) that is case insensitive rather than the default System.Dynamic.ExpandoObject. This was done as the PetaPoco was building case sensitive POCOS (derived from System.Dynamic.ExpandoObject) which created failures as Umbraco expected camelCase POCOs  whereas PostgreSQL was returning lowercase. If the POCO is case insensitive, problem solved. 
 
 Last of all, I added operators for Boolean-->Int comparisons, PostgreSQL specific Database laters (both old design and new), and provided in the UI the capability to choose PostgreSQL as a data store. 
 
